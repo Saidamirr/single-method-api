@@ -8,6 +8,6 @@ import { LocusMember } from './entities/locus-member.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Locus, LocusMember])],
   controllers: [LocusController],
-  providers: [LocusService]
+  providers: [LocusService],
 })
 export class LocusModule {}
