@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Locus } from './entities/locus.entity';
 import { Repository } from 'typeorm';
@@ -11,8 +11,47 @@ export class LocusService {
         private readonly locusRepository: Repository<Locus>,
     ) {}
 
-    async findAll(dto: GetLocusDto) {
+    async findAll(dto: GetLocusDto, user: any) {
     const qb = this.locusRepository.createQueryBuilder('locus');
+
+    if (user.role === 'limited') {
+        qb.andWhere(
+            'member.region_id IN (:...allowed)',
+            {
+            allowed: [
+                86118093,
+                86696489,
+                88186467,
+            ],
+            },
+        );
+    }
+
+    if (user.role === 'normal') {
+    if (dto.sideloading === 'locusMembers') {
+        throw new ForbiddenException(
+        'Sideloading not allowed',
+        );
+    }
+    }
+
+    const joinMember =
+    dto.regionId ||
+    dto.membershipStatus ||
+    dto.sideloading === 'locusMembers';
+
+    const withSideloading = dto.sideloading === 'locusMembers';
+
+    if (joinMember) {
+    qb.leftJoin(
+        'locus.locusMembers',
+        'member',
+    );
+
+    if (withSideloading) {
+        qb.addSelect(['member']);
+    }
+    }
 
     if (dto.id) {
     qb.andWhere('locus.id = :id', {
@@ -27,25 +66,6 @@ export class LocusService {
         assemblyId: dto.assemblyId,
         },
     );
-    }
-
-    const needsMemberJoin =
-    dto.regionId ||
-    dto.membershipStatus ||
-    dto.sideloading === 'locusMembers';
-
-    if (needsMemberJoin) {
-        if (dto.sideloading === 'locusMembers') {
-            qb.leftJoinAndSelect(
-            'locus.locusMembers',
-            'member',
-            );
-        } else {
-            qb.leftJoin(
-            'locus.locusMembers',
-            'member',
-            );
-        }
     }
 
     if (dto.regionId) {

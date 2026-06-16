@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { LocusModule } from './locus/locus.module';
 import { LocusController } from './locus/locus.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [LocusModule, 
+  imports: [
+    AuthModule,
+    LocusModule, 
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'hh-pgsql-public.ebi.ac.uk',
@@ -18,9 +19,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
       autoLoadEntities: true,
       synchronize: false,
-    }),
+    }), 
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
